@@ -21,16 +21,19 @@ export default function EditTugas() {
 
   // Fetch data tugas by ID
   useEffect(() => {
-    API.get(`/tugas`)
+    API.get(`/tugas/${id}`)
       .then(res => {
-        setForm({ ...res.data, nama: "", email: "", posisi: "" });
+        setForm(prev => ({
+          ...prev,
+          ...res.data,
+        }));
       })
       .catch(() => setError("Gagal mengambil data tugas"));
   }, [id]);
 
-  // Fetch karyawan
+  // Fetch semua karyawan
   useEffect(() => {
-    API.get("/karyawan/:id")
+    API.get("/karyawan")
       .then(res => setKaryawanList(res.data))
       .catch(() => setError("Gagal mengambil data karyawan"));
   }, []);

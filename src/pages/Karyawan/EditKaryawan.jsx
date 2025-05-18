@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Container, TextField, Button, Typography, Alert, Box, MenuItem
+  Container, TextField, Button, Typography, Alert, Box, MenuItem, Paper
 } from "@mui/material";
 import Layout from "../../components/layouts/Layout";
 import API from "../../services/api";
@@ -52,13 +52,22 @@ export default function EditKaryawan() {
   };
 
   return (
-    <Layout>
-      <Container maxWidth="sm">
-        <Typography variant="h5" gutterBottom>Edit Karyawan</Typography>
+  <Layout>
+    <Container maxWidth="sm">
+      <Typography variant="h5" gutterBottom>Edit Karyawan</Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
+      <Box
+        component={Paper}
+        elevation={3}
+        sx={{
+          p: 3,
+          borderRadius: 2,
+          backgroundColor: "white",
+        }}
+      >
         <Box component="form" onSubmit={handleSubmit}>
           <TextField fullWidth label="Nama Lengkap" name="nama_lengkap" value={form.nama_lengkap} onChange={handleChange} margin="normal" />
           <TextField fullWidth label="Tanggal Lahir" name="tanggal_lahir" type="date" value={form.tanggal_lahir} onChange={handleChange} margin="normal" InputLabelProps={{ shrink: true }} />
@@ -86,7 +95,9 @@ export default function EditKaryawan() {
             </Button>
           </Box>
         </Box>
-      </Container>
-    </Layout>
-  );
+      </Box>
+    </Container>
+  </Layout>
+);
+
 }

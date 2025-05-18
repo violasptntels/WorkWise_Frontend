@@ -5,7 +5,6 @@ import {
   Button,
   Paper,
   Container,
-  TextField,
   Grid,
   Card,
   CardContent,
@@ -15,18 +14,24 @@ import Layout from "../components/layouts/Layout";
 import API from "../services/api";
 
 export default function Dashboard() {
-  const [data, setData] = useState([]);
+  const [tugas, setTugas] = useState([]);
+  const [karyawan, setKaryawan] = useState([]);
 
   useEffect(() => {
+    // Ambil data tugas
     API.get("/tugas")
-      .then((res) => setData(res.data))
+      .then((res) => setTugas(res.data))
       .catch((err) => console.error("Gagal fetch tugas:", err));
+
+    // Ambil data karyawan
+    API.get("/karyawan")
+      .then((res) => setKaryawan(res.data))
+      .catch((err) => console.error("Gagal fetch karyawan:", err));
   }, []);
 
-  // Data ringkasan
-  const totalKaryawan = new Set(data.map((item) => item.karyawan_id)).size;
-  const totalTugas = data.length;
-  const tugasSelesai = data.filter(
+  const totalKaryawan = karyawan.length;
+  const totalTugas = tugas.length;
+  const tugasSelesai = tugas.filter(
     (item) => item.status?.toLowerCase() === "selesai"
   ).length;
   const tugasTertunda = totalTugas - tugasSelesai;
@@ -42,7 +47,6 @@ export default function Dashboard() {
             Sistem pengelolaan tugas karyawan yang efisien
           </Typography>
 
-          {/* Ringkasan Kartu */}
           <Grid container spacing={3} sx={{ mt: 6, mb: 6 }}>
             {[
               {
@@ -95,16 +99,15 @@ export default function Dashboard() {
             ))}
           </Grid>
 
-          {/* Kata-kata motivasi/deskripsi */}
-          <Box mt={4} textAlign="">  
+          <Box mt={4}>
             <Typography variant="h6" gutterBottom>
               Tingkatkan produktivitas tim Anda
-            </Typography> 
+            </Typography>
             <Typography variant="subtitle1" color="text.secondary">
-              WorkWise membantu Anda memantau produktivitas secara menyeluruh, menyederhanakan koordinasi
-             tugas antar anggota tim, dan meningkatkan kolaborasi dengan komunikasi 
-              yang mudah serta alur kerja yang terintegrasi untuk mencapai hasil yang optimal.
-
+              WorkWise membantu Anda memantau produktivitas secara menyeluruh,
+              menyederhanakan koordinasi tugas antar anggota tim, dan meningkatkan
+              kolaborasi dengan komunikasi yang mudah serta alur kerja yang terintegrasi
+              untuk mencapai hasil yang optimal.
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={1}>
               Tetap fokus, selesaikan tugas tepat waktu, dan capai target bersama!

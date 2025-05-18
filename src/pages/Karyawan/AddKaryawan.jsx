@@ -9,6 +9,7 @@ import {
   MenuItem,
   Paper,
   Grid,
+  Autocomplete,
 } from "@mui/material";
 import Layout from "../../components/layouts/Layout";
 import API from "../../services/api";
@@ -37,7 +38,6 @@ export default function AddKaryawan() {
     setError("");
     setSuccess("");
 
-    // Validasi sederhana
     if (
       !form.id ||
       !form.nama_lengkap ||
@@ -128,35 +128,45 @@ export default function AddKaryawan() {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Jabatan"
-                  name="jabatan"
+                <Autocomplete
+                  freeSolo
+                  options={["Manager", "Staff", "HRD"]}
                   value={form.jabatan}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="">Pilih jabatan</MenuItem>
-                  <MenuItem value="Manager">Manager</MenuItem>
-                  <MenuItem value="Staff">Staff</MenuItem>
-                  <MenuItem value="HRD">HRD</MenuItem>
-                </TextField>
+                  onChange={(e, newValue) =>
+                    setForm({ ...form, jabatan: newValue || "" })
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Jabatan"
+                      name="jabatan"
+                      onChange={handleChange}
+                    />
+                  )}
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Posisi"
-                  name="posisi"
+                <Autocomplete
+                  freeSolo
+                  options={[
+                    "Frontend Developer",
+                    "Backend Developer",
+                    "Marketing",
+                  ]}
                   value={form.posisi}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="">Pilih posisi</MenuItem>
-                  <MenuItem value="Frontend Developer">Frontend Developer</MenuItem>
-                  <MenuItem value="Backend Developer">Backend Developer</MenuItem>
-                  <MenuItem value="Marketing">Marketing</MenuItem>
-                </TextField>
+                  onChange={(e, newValue) =>
+                    setForm({ ...form, posisi: newValue || "" })
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Posisi"
+                      name="posisi"
+                      onChange={handleChange}
+                    />
+                  )}
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
