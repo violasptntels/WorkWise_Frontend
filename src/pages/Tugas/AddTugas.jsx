@@ -10,12 +10,14 @@ import {
   Grid,
   Autocomplete,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import Layout from "../../components/layouts/Layout";
 import API from "../../services/api";
 
-export default function AddTugas() {
+export default function AddTugas({ initialData }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
-    _id: "", // disesuaikan dengan backend
+    id: "",
     judul: "",
     deskripsi: "",
     karyawan_id: "",
@@ -36,6 +38,22 @@ export default function AddTugas() {
       .catch(() => setError("Gagal mengambil data karyawan"));
   }, []);
 
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        id: initialData.id || "",
+        judul: initialData.judul || "",
+        deskripsi: initialData.deskripsi || "",
+        karyawan_id: initialData.karyawan_id || "",
+        status: initialData.status || "",
+        deadline: initialData.deadline || "",
+        email: initialData.email || "",
+        posisi: initialData.posisi || "",
+        nama_lengkap: initialData.nama_lengkap || "",
+      });
+    }
+  }, [initialData]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -44,7 +62,7 @@ export default function AddTugas() {
     if (newValue) {
       setForm({
         ...form,
-        karyawan_id: newValue.id,
+        karyawan_id: (newValue.id || newValue._id)?.toString(),
         email: newValue.email || "",
         posisi: newValue.posisi || "",
         nama_lengkap: newValue.nama_lengkap || "",
@@ -66,7 +84,7 @@ export default function AddTugas() {
 
   const handleReset = () => {
     setForm({
-      _id: "",
+      id: "",
       judul: "",
       deskripsi: "",
       karyawan_id: "",
@@ -86,7 +104,7 @@ export default function AddTugas() {
     setSuccess("");
 
     if (
-      !form._id ||
+      !form.id ||
       !form.judul ||
       !form.deskripsi ||
       !form.karyawan_id ||
@@ -102,28 +120,31 @@ export default function AddTugas() {
       return;
     }
 
+    const payload = {
+      id: form.id,
+      judul: form.judul,
+      deskripsi: form.deskripsi,
+      karyawan_id: form.karyawan_id,
+      status: form.status,
+      deadline: form.deadline,
+    };
+
     try {
-      await API.post("/tugas", {
-        _id: form._id,
-        judul: form.judul,
-        deskripsi: form.deskripsi,
-        karyawan_id: form.karyawan_id,
-        status: form.status,
-        deadline: form.deadline,
-      });
+      await API.post("/tugas", payload);
       setSuccess("Tugas berhasil ditambahkan.");
-      handleReset();
+      setTimeout(() => navigate("/tugas"), 800); // kembali ke list tugas setelah sukses
     } catch (err) {
       setError(
         err?.response?.data?.message ||
-        "Gagal menyimpan tugas. Pastikan data sudah benar dan server aktif."
+        err?.message ||
+        "Gagal menyimpan tugas."
       );
     }
   };
 
   return (
     <Layout>
-      <Container maxWidth="md">
+      <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
           Tambah Tugas
         </Typography>
@@ -134,7 +155,7 @@ export default function AddTugas() {
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <Paper elevation={3} sx={{ p: 6, mt: 4, borderRadius: 3 }}>
+        <Paper elevation={3} sx={{ p: 4, mt: 3, borderRadius: 3 }}>
           <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
             Form Tugas Baru
           </Typography>
@@ -148,8 +169,8 @@ export default function AddTugas() {
                 <TextField
                   fullWidth
                   label="ID Tugas"
-                  name="_id"
-                  value={form._id}
+                  name="id"
+                  value={form.id}
                   onChange={handleChange}
                   placeholder="Contoh: TGS001"
                   size="medium"
@@ -204,7 +225,7 @@ export default function AddTugas() {
                       : ""
                   }
                   value={
-                    karyawanList.find((k) => k.id === form.karyawan_id) || null
+                    karyawanList.find((k) => (k.id || k._id) === form.karyawan_id) || null
                   }
                   onChange={handleKaryawanChange}
                   renderInput={(params) => (
@@ -221,7 +242,7 @@ export default function AddTugas() {
                     />
                   )}
                   isOptionEqualToValue={(option, value) =>
-                    option.id === value.id
+                    (option.id || option._id) === (value?.id || value?._id)
                   }
                 />
               </Grid>

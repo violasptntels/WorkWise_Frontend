@@ -15,8 +15,9 @@ export default function EditTugas() {
     deskripsi: "",
     status: "",
     deadline: "",
+    karyawan_id: "",
   });
-  const [original, setOriginal] = useState(null); // simpan data asli
+  const [karyawanList, setKaryawanList] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -25,17 +26,21 @@ export default function EditTugas() {
       setError("ID tugas tidak ditemukan.");
       return;
     }
-    API.get(`tugas/${id}`)
+    API.get(`/tugas/${id}`)
       .then(res => {
         setForm({
           judul: res.data.judul || "",
           deskripsi: res.data.deskripsi || "",
           status: res.data.status || "",
           deadline: res.data.deadline || "",
+          karyawan_id: res.data.karyawan_id || "",
         });
-        setOriginal(res.data); // simpan data asli
       })
       .catch(() => setError("Gagal mengambil data tugas"));
+    // Ambil daftar karyawan
+    API.get("/karyawan")
+      .then(res => setKaryawanList(res.data))
+      .catch(() => setKaryawanList([]));
   }, [id]);
 
   const handleChange = e => {
@@ -46,29 +51,60 @@ export default function EditTugas() {
     e.preventDefault();
     setError(""); setSuccess("");
 
-    if (!form.judul && !form.deskripsi && !form.status && !form.deadline) {
-      setError("Minimal satu field harus diubah.");
+    // Validasi field wajib
+    if (!form.judul || !form.deskripsi || !form.status || !form.deadline || !form.karyawan_id) {
+      setError("Semua field wajib diisi.");
       return;
     }
 
-    // Siapkan objek update hanya dengan field yang diubah
-    const updateData = {};
-    if (form.judul !== original?.judul) updateData.judul = form.judul;
-    if (form.deskripsi !== original?.deskripsi) updateData.deskripsi = form.deskripsi;
-    if (form.status !== original?.status) updateData.status = form.status;
-    if (form.deadline !== original?.deadline) updateData.deadline = form.deadline;
-
-    if (Object.keys(updateData).length === 0) {
-      setError("Tidak ada perubahan data.");
+    // Validasi format deadline (YYYY-MM-DD)
+    const deadlineRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!deadlineRegex.test(form.deadline)) {
+      setError("Format deadline harus YYYY-MM-DD.");
       return;
     }
+
+    // Validasi status (harus sama persis dengan backend)
+    const allowedStatus = ["Belum Dikerjakan", "Sedang Dikerjakan", "Selesai"];
+    if (!allowedStatus.includes(form.status)) {
+      setError("Status tidak valid.");
+      return;
+    }
+
+    // Kirim data dengan tipe yang benar (karyawan_id dan id tugas sebagai string)
+    const updateData = {
+      judul: form.judul,
+      deskripsi: form.deskripsi,
+      status: form.status,
+      deadline: form.deadline,
+      karyawan_id: form.karyawan_id, // string
+    };
+
+    console.log("Data yang dikirim ke backend:", updateData);
 
     try {
-      await API.put(`tugas/${id}`, updateData);
+      // pastikan id juga dikirim sebagai string pada endpoint
+      const res = await API.put(`/tugas/${String(id)}`, updateData);
+      console.log("Respon backend:", res.data);
       setSuccess("Tugas berhasil diperbarui.");
       setTimeout(() => navigate("/tugas"), 1000);
-    } catch {
-      setError("Gagal update tugas.");
+    } catch (err) {
+      console.error("Edit tugas error:", err);
+      if (err?.response?.data) {
+        setError(
+          typeof err.response.data === "string"
+            ? err.response.data
+            : JSON.stringify(err.response.data)
+        );
+      } else if (err?.response?.status === 500) {
+        setError(
+          "Terjadi kesalahan pada server (500). Silakan coba lagi nanti atau hubungi admin."
+        );
+      } else {
+        setError(
+          "Gagal update tugas. Pastikan data yang dimasukkan benar."
+        );
+      }
     }
   };
 
@@ -89,6 +125,23 @@ export default function EditTugas() {
           }}
         >
           <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              select
+              label="Karyawan"
+              name="karyawan_id"
+              value={form.karyawan_id}
+              onChange={handleChange}
+              margin="normal"
+              required
+            >
+              <MenuItem value="">Pilih Karyawan</MenuItem>
+              {karyawanList.map(k => (
+                <MenuItem key={k.id} value={k.id}>
+                  {k.nama_lengkap} ({k.email})
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               fullWidth
               label="Judul Tugas"

@@ -13,11 +13,14 @@ export default function ListTugas() {
   const [karyawanList, setKaryawanList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchTugas = () => {
-    API.get("/tugas")
-      .then(res => setData(res.data))
-      .catch(() => alert("Gagal mengambil data tugas"));
-  };
+ const fetchTugas = () => {
+  API.get("/tugas")
+    .then(res => {
+      console.log("Data tugas:", res.data); // Tambahkan ini
+      setData(res.data)
+    })
+    .catch(() => alert("Gagal mengambil data tugas"));
+};
 
   const fetchKaryawan = () => {
     API.get("/karyawan")
@@ -31,16 +34,21 @@ export default function ListTugas() {
   }, []);
 
   const handleDelete = async (id) => {
+      console.log("ID yang mau dihapus:", id)
     if (window.confirm("Yakin ingin menghapus tugas ini?")) {
       try {
         // Gunakan id tugas yang benar untuk menghapus
         await API.delete(`/tugas/${id}`);
         fetchTugas();
       } catch (err) {
-        alert(
-          err?.response?.data?.message ||
-          "Gagal menghapus tugas. Pastikan Anda memiliki akses dan ID tugas benar."
-        );
+        if (err?.response?.status === 500) {
+          alert("Terjadi kesalahan pada server (500). Silakan coba lagi nanti atau hubungi admin.");
+        } else {
+          alert(
+            err?.response?.data?.message ||
+            "Gagal menghapus tugas. Pastikan Anda memiliki akses dan ID tugas benar."
+          );
+        }
       }
     }
   };
@@ -145,7 +153,7 @@ export default function ListTugas() {
                 {filteredData.map((item) => {
                   const karyawan = getKaryawan(item.karyawan_id);
                   return (
-                    <TableRow key={item._id}>
+                    <TableRow key={item.id}>
                       {/* <TableCell>{item.tugas_id}</TableCell> */}
                       <TableCell>{karyawan.nama_lengkap || "-"}</TableCell>
                       <TableCell>{item.judul}</TableCell>
@@ -157,7 +165,7 @@ export default function ListTugas() {
                         <Box display="flex" justifyContent="flex-end" gap={1}>
                           <Button
                             component={Link}
-                            to={`/tugas/edit/${item.tugas_id}`}
+                            to={`/tugas/edit/${item.id}`}
                             variant="outlined"
                             size="small"
                             color="secondary"
@@ -169,7 +177,7 @@ export default function ListTugas() {
                             variant="outlined"
                             color="error"
                             size="small"
-                            onClick={() => handleDelete(item.tugas__id)}
+                            onClick={() => handleDelete(item.id)}
                             sx={{ textTransform: "none", borderRadius: "6px" }}
                           >
                             Hapus
@@ -187,4 +195,3 @@ export default function ListTugas() {
     </Layout>
   );
 }
-

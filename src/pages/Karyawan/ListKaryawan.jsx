@@ -45,7 +45,7 @@ export default function ListKaryawan() {
         {/* Header Section */}
 <Box mb={3}>
   <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-          Manajemen Karyawan
+          Data Karyawan
         </Typography>
         <Typography variant="subtitle1" gutterBottom>
           lihat dan kelola semua karyawan di sistem Anda
