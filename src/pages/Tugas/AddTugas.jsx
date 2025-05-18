@@ -6,77 +6,118 @@ import {
   Typography,
   Alert,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Paper,
   Grid,
-  Paper
+  Autocomplete,
 } from "@mui/material";
 import Layout from "../../components/layouts/Layout";
 import API from "../../services/api";
 
 export default function AddTugas() {
   const [form, setForm] = useState({
+    _id: "", // disesuaikan dengan backend
     judul: "",
     deskripsi: "",
     karyawan_id: "",
     status: "",
     deadline: "",
     email: "",
-    posisi: ""
+    posisi: "",
+    nama_lengkap: "",
   });
 
   const [karyawanList, setKaryawanList] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Fetch data karyawan saat pertama kali render
   useEffect(() => {
     API.get("/karyawan")
-      .then(res => setKaryawanList(res.data))
+      .then((res) => setKaryawanList(res.data))
       .catch(() => setError("Gagal mengambil data karyawan"));
   }, []);
 
-  // Handle input form
-  const handleChange = e => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle submit form
-  const handleSubmit = async e => {
+  const handleKaryawanChange = (event, newValue) => {
+    if (newValue) {
+      setForm({
+        ...form,
+        karyawan_id: newValue.id,
+        email: newValue.email || "",
+        posisi: newValue.posisi || "",
+        nama_lengkap: newValue.nama_lengkap || "",
+      });
+    } else {
+      setForm({
+        ...form,
+        karyawan_id: "",
+        email: "",
+        posisi: "",
+        nama_lengkap: "",
+      });
+    }
+  };
+
+  const handleStatusChange = (event, newValue) => {
+    setForm({ ...form, status: newValue || "" });
+  };
+
+  const handleReset = () => {
+    setForm({
+      _id: "",
+      judul: "",
+      deskripsi: "",
+      karyawan_id: "",
+      status: "",
+      deadline: "",
+      email: "",
+      posisi: "",
+      nama_lengkap: "",
+    });
+    setError("");
+    setSuccess("");
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); setSuccess("");
+    setError("");
+    setSuccess("");
 
-    const { judul, deskripsi, karyawan_id, status, deadline } = form;
-
-    if (!judul || !deskripsi || !karyawan_id || !status || !deadline) {
+    if (
+      !form._id ||
+      !form.judul ||
+      !form.deskripsi ||
+      !form.karyawan_id ||
+      !form.status ||
+      !form.deadline
+    ) {
       setError("Semua field wajib diisi.");
       return;
     }
 
-    try {
-      const dataToSend = {
-        judul,
-        deskripsi,
-        karyawan_id,
-        status,
-        deadline
-      };
+    if (form.email && !form.email.includes("@")) {
+      setError("Format email tidak valid.");
+      return;
+    }
 
-      await API.post("/tugas", dataToSend);
-      setSuccess("Tugas berhasil ditambahkan.");
-      setForm({
-        judul: "",
-        deskripsi: "",
-        karyawan_id: "",
-        status: "",
-        deadline: "",
-        email: "",
-        posisi: ""
+    try {
+      await API.post("/tugas", {
+        _id: form._id,
+        judul: form.judul,
+        deskripsi: form.deskripsi,
+        karyawan_id: form.karyawan_id,
+        status: form.status,
+        deadline: form.deadline,
       });
-    } catch {
-      setError("Gagal menyimpan tugas.");
+      setSuccess("Tugas berhasil ditambahkan.");
+      handleReset();
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+        "Gagal menyimpan tugas. Pastikan data sudah benar dan server aktif."
+      );
     }
   };
 
@@ -93,115 +134,160 @@ export default function AddTugas() {
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <Paper elevation={3} sx={{ p: 4, mt: 2 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
+        <Paper elevation={3} sx={{ p: 6, mt: 4, borderRadius: 3 }}>
+          <Typography variant="h6" fontWeight="bold" color="primary" gutterBottom>
             Form Tugas Baru
           </Typography>
-          <Typography variant="body2" gutterBottom>
+          <Typography variant="body2" gutterBottom sx={{ mb: 3 }}>
             Masukkan detail tugas yang akan diberikan
           </Typography>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate>
-            <TextField
-              fullWidth
-              label="Judul Tugas"
-              name="judul"
-              value={form.judul}
-              onChange={handleChange}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              label="Deskripsi Tugas"
-              name="deskripsi"
-              value={form.deskripsi}
-              onChange={handleChange}
-              margin="normal"
-              multiline
-              rows={4}
-            />
-
-            <Grid container spacing={2} mt={1}>
-              <Grid item xs={12} md={4}>
+          <Box component="form" onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="ID Tugas"
+                  name="_id"
+                  value={form._id}
+                  onChange={handleChange}
+                  placeholder="Contoh: TGS001"
+                  size="medium"
+                  InputProps={{ sx: { minHeight: 56, fontSize: 18 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Judul Tugas"
+                  name="judul"
+                  value={form.judul}
+                  onChange={handleChange}
+                  placeholder="Judul tugas"
+                  size="medium"
+                  InputProps={{ sx: { minHeight: 56, fontSize: 18 } }}
+                />
+              </Grid>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Tenggat Waktu"
                   name="deadline"
                   type="date"
-                  InputLabelProps={{ shrink: true }}
                   value={form.deadline}
                   onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  size="medium"
+                  InputProps={{ sx: { minHeight: 56, fontSize: 18 } }}
                 />
               </Grid>
-
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    name="status"
-                    value={form.status}
-                    label="Status"
-                    onChange={handleChange}
-                  >
-                    <MenuItem value="Belum Dikerjakan">Belum Dikerjakan</MenuItem>
-                    <MenuItem value="Sedang Dikerjakan">Sedang Dikerjakan</MenuItem>
-                    <MenuItem value="Selesai">Selesai</MenuItem>
-                  </Select>
-                </FormControl>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Deskripsi Tugas"
+                  name="deskripsi"
+                  value={form.deskripsi}
+                  onChange={handleChange}
+                  multiline
+                  rows={8}
+                  placeholder="Deskripsi tugas"
+                  size="medium"
+                  InputProps={{ sx: { fontSize: 18 } }}
+                />
               </Grid>
-
-              <Grid item xs={12} md={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Pilih Karyawan</InputLabel>
-                  <Select
-                    name="karyawan_id"
-                    value={form.karyawan_id}
-                    label="Pilih Karyawan"
-                    onChange={e => {
-                      const selectedID = e.target.value;
-                      const selected = karyawanList.find(k => k.id === selectedID);
-                      setForm({
-                        ...form,
-                        karyawan_id: selectedID,
-                        email: selected?.email || "",
-                        posisi: selected?.posisi || ""
-                      });
-                    }}
-                  >
-                    {karyawanList.map(karyawan => (
-                      <MenuItem key={karyawan.id} value={karyawan.id}>
-                        {karyawan.nama_lengkap} ({karyawan.posisi})
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+              <Grid item xs={12}>
+                <Autocomplete
+                  options={karyawanList}
+                  getOptionLabel={(option) =>
+                    option.nama_lengkap
+                      ? `${option.nama_lengkap} (${option.posisi})`
+                      : ""
+                  }
+                  value={
+                    karyawanList.find((k) => k.id === form.karyawan_id) || null
+                  }
+                  onChange={handleKaryawanChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Nama Lengkap"
+                      name="karyawan_id"
+                      placeholder="Pilih karyawan"
+                      size="medium"
+                      InputProps={{
+                        ...params.InputProps,
+                        sx: { minHeight: 56, fontSize: 18 }
+                      }}
+                    />
+                  )}
+                  isOptionEqualToValue={(option, value) =>
+                    option.id === value.id
+                  }
+                />
               </Grid>
-            </Grid>
-
-            <Grid container spacing={2} mt={1}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12}>
+                <Autocomplete
+                  options={[
+                    "Belum Dikerjakan",
+                    "Sedang Dikerjakan",
+                    "Selesai",
+                  ]}
+                  value={form.status}
+                  onChange={handleStatusChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Status"
+                      name="status"
+                      placeholder="Pilih status"
+                      size="medium"
+                      InputProps={{
+                        ...params.InputProps,
+                        sx: { minHeight: 56, fontSize: 18 }
+                      }}
+                    />
+                  )}
+                  freeSolo
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Email"
                   value={form.email}
                   disabled
+                  placeholder="Email karyawan"
+                  size="medium"
+                  InputProps={{ sx: { minHeight: 56, fontSize: 18 } }}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
                   label="Posisi"
                   value={form.posisi}
                   disabled
+                  placeholder="Posisi karyawan"
+                  size="medium"
+                  InputProps={{ sx: { minHeight: 56, fontSize: 18 } }}
                 />
               </Grid>
             </Grid>
 
-            <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
-              <Button variant="outlined" color="secondary">
+            <Box sx={{ mt: 6, display: "flex", justifyContent: "flex-end", gap: 3 }}>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={handleReset}
+                sx={{ px: 4, py: 1.5, fontSize: 16 }}
+              >
                 Batal
               </Button>
-              <Button type="submit" variant="contained">
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ backgroundColor: "#2563eb", px: 4, py: 1.5, fontSize: 16 }}
+              >
                 Simpan
               </Button>
             </Box>

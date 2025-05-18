@@ -10,6 +10,7 @@ import Layout from "../../components/layouts/Layout";
 
 export default function ListTugas() {
   const [data, setData] = useState([]);
+  const [karyawanList, setKaryawanList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchTugas = () => {
@@ -18,15 +19,41 @@ export default function ListTugas() {
       .catch(() => alert("Gagal mengambil data tugas"));
   };
 
+  const fetchKaryawan = () => {
+    API.get("/karyawan")
+      .then(res => setKaryawanList(res.data))
+      .catch(() => alert("Gagal mengambil data karyawan"));
+  };
+
   useEffect(() => {
     fetchTugas();
+    fetchKaryawan();
   }, []);
 
-  const filteredData = data.filter(tugas =>
-    tugas.karyawan_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tugas.judul?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tugas.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDelete = async (id) => {
+    if (window.confirm("Yakin ingin menghapus tugas ini?")) {
+      try {
+        // Gunakan id tugas yang benar untuk menghapus
+        await API.delete(`/tugas/${id}`);
+        fetchTugas();
+      } catch (err) {
+        alert(
+          err?.response?.data?.message ||
+          "Gagal menghapus tugas. Pastikan Anda memiliki akses dan ID tugas benar."
+        );
+      }
+    }
+  };
+
+  // Helper untuk cari nama/email dari id karyawan
+  const getKaryawan = (id) => karyawanList.find(k => k.id === id) || {};
+
+  const filteredData = data.filter(tugas => {
+    const karyawan = getKaryawan(tugas.karyawan_id);
+    return (
+      karyawan.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   const getStatusChip = (status) => {
     let color = "default";
@@ -55,49 +82,38 @@ export default function ListTugas() {
         {/* Header Section */}
         <Box mb={3}>
           <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-          Manajemen Tugas
-        </Typography>
-        <Typography variant="subtitle1" gutterBottom>
-          Lihat dan kelola semua tugas karyawan di sistem Anda
-        </Typography>
+            Manajemen Tugas
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Lihat dan kelola semua tugas karyawan di sistem Anda
+          </Typography>
         </Box>
 
         {/* Action Bar */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
           <TextField
-  placeholder="Cari berdasarkan ID Karyawan, judul, atau nama"
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-  sx={{
-    width: "300px",
-    '& .MuiInputBase-input': {
-      color: 'white',             // warna teks input
-    },
-    '& ::placeholder': {
-      color: 'white',             // warna placeholder
-      opacity: 1,
-    },
-    '& .MuiOutlinedInput-root': {
-      borderColor: 'white',       // border default
-      '& fieldset': {
-        borderColor: 'white',     // border kotak sebelum klik
-      },
-      '&:hover fieldset': {
-        borderColor: 'white',     // border saat hover
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: 'white',     // border saat fokus
-      },
-    },
-  }}
-  InputProps={{
-    startAdornment: (
-      <InputAdornment position="start">
-        <Search sx={{ color: 'white' }} />  {/* ikon putih */}
-      </InputAdornment>
-    ),
-  }}
-/>
+            placeholder="Cari berdasarkan nama karyawan"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{
+              width: "300px",
+              '& .MuiInputBase-input': { color: 'white' },
+              '& ::placeholder': { color: 'white', opacity: 1 },
+              '& .MuiOutlinedInput-root': {
+                borderColor: 'white',
+                '& fieldset': { borderColor: 'white' },
+                '&:hover fieldset': { borderColor: 'white' },
+                '&.Mui-focused fieldset': { borderColor: 'white' },
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: 'white' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
 
           <Button
             variant="contained"
@@ -115,7 +131,7 @@ export default function ListTugas() {
             <Table stickyHeader>
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
-                  <TableCell><strong>ID Karyawan</strong></TableCell>
+                  {/* <TableCell><strong>ID Tugas</strong></TableCell> */}
                   <TableCell><strong>Nama</strong></TableCell>
                   <TableCell><strong>Judul Tugas</strong></TableCell>
                   <TableCell><strong>Deskripsi</strong></TableCell>
@@ -126,40 +142,43 @@ export default function ListTugas() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredData.map((item) => (
-                  <TableRow key={item._id}>
-                    <TableCell>{item.karyawan_id}</TableCell>
-                    <TableCell>{item.nama_lengkap}</TableCell>
-                    <TableCell>{item.judul}</TableCell>
-                    <TableCell>{item.deskripsi}</TableCell>
-                    <TableCell>{item.deadline}</TableCell>
-                    <TableCell>{getStatusChip(item.status)}</TableCell>
-                    <TableCell>{item.email}</TableCell>
-                    <TableCell align="right">
-                      <Box display="flex" justifyContent="flex-end" gap={1}>
-                        <Button
-                          size="small"
-                          component={Link}
-                          to={`/tugas/${item._id}`}
-                          variant="outlined"
-                          sx={{ textTransform: "none", borderRadius: "6px" }}
-                        >
-                          Detail
-                        </Button>
-                        <Button
-                          size="small"
-                          component={Link}
-                          to={`/tugas/edit/${item._id}`}
-                          variant="outlined"
-                          color="secondary"
-                          sx={{ textTransform: "none", borderRadius: "6px" }}
-                        >
-                          Edit
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredData.map((item) => {
+                  const karyawan = getKaryawan(item.karyawan_id);
+                  return (
+                    <TableRow key={item._id}>
+                      {/* <TableCell>{item.tugas_id}</TableCell> */}
+                      <TableCell>{karyawan.nama_lengkap || "-"}</TableCell>
+                      <TableCell>{item.judul}</TableCell>
+                      <TableCell>{item.deskripsi}</TableCell>
+                      <TableCell>{item.deadline}</TableCell>
+                      <TableCell>{getStatusChip(item.status)}</TableCell>
+                      <TableCell>{karyawan.email || "-"}</TableCell>
+                      <TableCell align="right">
+                        <Box display="flex" justifyContent="flex-end" gap={1}>
+                          <Button
+                            component={Link}
+                            to={`/tugas/edit/${item.tugas_id}`}
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                            sx={{ textTransform: "none", borderRadius: "6px" }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={() => handleDelete(item.tugas__id)}
+                            sx={{ textTransform: "none", borderRadius: "6px" }}
+                          >
+                            Hapus
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </Box>

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Container, TextField, Button, Typography, Alert, Box,
-  FormControl, InputLabel, Select, MenuItem
+  Container, TextField, Button, Typography, Alert, Box, Paper, MenuItem
 } from "@mui/material";
 import Layout from "../../components/layouts/Layout";
 import API from "../../services/api";
@@ -12,8 +11,14 @@ export default function EditTugas() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    id: "", judul: "", deskripsi: "", karyawan_id: "",
-    status: "", deadline: "", nama: "", email: "", posisi: ""
+    judul: "",
+    deskripsi: "",
+    karyawan_id: "",
+    status: "",
+    deadline: "",
+    nama_lengkap: "",
+    email: "",
+    posisi: "",
   });
   const [karyawanList, setKaryawanList] = useState([]);
   const [error, setError] = useState("");
@@ -26,6 +31,9 @@ export default function EditTugas() {
         setForm(prev => ({
           ...prev,
           ...res.data,
+          nama_lengkap: res.data.nama_lengkap || "",
+          email: res.data.email || "",
+          posisi: res.data.posisi || "",
         }));
       })
       .catch(() => setError("Gagal mengambil data tugas"));
@@ -42,12 +50,27 @@ export default function EditTugas() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleUpdate = async e => {
+  const handleKaryawanChange = e => {
+    const selected = karyawanList.find(k => k.id === e.target.value);
+    setForm({
+      ...form,
+      karyawan_id: e.target.value,
+      nama_lengkap: selected?.nama_lengkap || "",
+      email: selected?.email || "",
+      posisi: selected?.posisi || "",
+    });
+  };
+
+  const handleSubmit = async e => {
     e.preventDefault();
     setError(""); setSuccess("");
 
     if (!form.judul || !form.karyawan_id || !form.deadline || !form.status) {
       setError("Field wajib tidak boleh kosong.");
+      return;
+    }
+    if (form.email && !form.email.includes("@")) {
+      setError("Format email tidak valid.");
       return;
     }
 
@@ -61,18 +84,18 @@ export default function EditTugas() {
       };
       await API.put(`/tugas/${id}`, dataToSend);
       setSuccess("Tugas berhasil diperbarui.");
-      setTimeout(() => navigate("/"), 1000);
+      setTimeout(() => navigate("/tugas"), 1000);
     } catch {
       setError("Gagal update tugas.");
     }
   };
 
   const handleDelete = async () => {
-    if (confirm("Yakin ingin menghapus tugas ini?")) {
+    if (window.confirm("Yakin ingin menghapus tugas ini?")) {
       try {
         await API.delete(`/tugas/${id}`);
         alert("Tugas berhasil dihapus.");
-        navigate("/");
+        navigate("/tugas");
       } catch {
         alert("Gagal menghapus tugas.");
       }
@@ -83,49 +106,104 @@ export default function EditTugas() {
     <Layout>
       <Container maxWidth="sm">
         <Typography variant="h5" gutterBottom>Edit Tugas</Typography>
-
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
-        <Box component="form" onSubmit={handleUpdate}>
-          <TextField fullWidth label="Judul Tugas" name="judul" value={form.judul} onChange={handleChange} margin="normal" />
-          <TextField fullWidth label="Deskripsi" name="deskripsi" value={form.deskripsi} onChange={handleChange} margin="normal" />
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel>Karyawan</InputLabel>
-            <Select
+        <Box
+          component={Paper}
+          elevation={3}
+          sx={{
+            p: 3,
+            borderRadius: 2,
+            backgroundColor: "white",
+          }}
+        >
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Judul Tugas"
+              name="judul"
+              value={form.judul}
+              onChange={handleChange}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              label="Deskripsi"
+              name="deskripsi"
+              value={form.deskripsi}
+              onChange={handleChange}
+              margin="normal"
+              multiline
+              rows={3}
+            />
+            <TextField
+              fullWidth
+              select
+              label="Karyawan"
               name="karyawan_id"
               value={form.karyawan_id}
-              onChange={e => {
-                const selected = karyawanList.find(k => k.id === e.target.value);
-                setForm({
-                  ...form,
-                  karyawan_id: e.target.value,
-                  nama: selected?.nama_lengkap || "",
-                  email: selected?.email || "",
-                  posisi: selected?.posisi || ""
-                });
-              }}
-              label="Karyawan"
+              onChange={handleKaryawanChange}
+              margin="normal"
             >
               {karyawanList.map(karyawan => (
                 <MenuItem key={karyawan.id} value={karyawan.id}>
                   {karyawan.nama_lengkap} ({karyawan.posisi})
                 </MenuItem>
               ))}
-            </Select>
-          </FormControl>
+            </TextField>
+            <TextField
+              fullWidth
+              disabled
+              label="Nama Lengkap"
+              value={form.nama_lengkap}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              disabled
+              label="Email"
+              value={form.email}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              disabled
+              label="Posisi"
+              value={form.posisi}
+              margin="normal"
+            />
+            <TextField
+              fullWidth
+              select
+              label="Status"
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              margin="normal"
+            >
+              <MenuItem value="Belum Dikerjakan">Belum Dikerjakan</MenuItem>
+              <MenuItem value="Sedang Dikerjakan">Sedang Dikerjakan</MenuItem>
+              <MenuItem value="Selesai">Selesai</MenuItem>
+            </TextField>
+            <TextField
+              fullWidth
+              label="Deadline"
+              name="deadline"
+              type="date"
+              value={form.deadline}
+              onChange={handleChange}
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+            />
 
-          <TextField fullWidth disabled label="Nama" value={form.nama} margin="normal" />
-          <TextField fullWidth disabled label="Email" value={form.email} margin="normal" />
-          <TextField fullWidth disabled label="Posisi" value={form.posisi} margin="normal" />
-
-          <TextField fullWidth label="Status" name="status" value={form.status} onChange={handleChange} margin="normal" />
-          <TextField fullWidth label="Deadline (yyyy-mm-dd)" name="deadline" value={form.deadline} onChange={handleChange} margin="normal" />
-
-          <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
-            <Button type="submit" variant="contained">Simpan</Button>
-            <Button variant="contained" color="error" onClick={handleDelete}>Hapus</Button>
+            <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
+              <Button type="submit" variant="contained">Simpan</Button>
+              <Button variant="outlined" color="inherit" onClick={() => navigate("/tugas")}>
+                Batal
+              </Button>
+              <Button variant="contained" color="error" onClick={handleDelete}>Hapus</Button>
+            </Box>
           </Box>
         </Box>
       </Container>
