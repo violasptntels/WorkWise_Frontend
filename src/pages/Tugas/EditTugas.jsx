@@ -21,7 +21,7 @@ export default function EditTugas() {
 
   // Fetch data tugas by ID
   useEffect(() => {
-    API.get(`/tugas/${id}`)
+    API.get(`/tugas`)
       .then(res => {
         setForm({ ...res.data, nama: "", email: "", posisi: "" });
       })
@@ -30,7 +30,7 @@ export default function EditTugas() {
 
   // Fetch karyawan
   useEffect(() => {
-    API.get("/karyawan")
+    API.get("/karyawan/:id")
       .then(res => setKaryawanList(res.data))
       .catch(() => setError("Gagal mengambil data karyawan"));
   }, []);

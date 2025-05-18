@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-  Table, TableHead, TableRow, TableCell, TableBody,
-  Typography, Button, Paper, Container
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Container,
+  TextField,
+  Grid,
+  Card,
+  CardContent,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import Layout from "../components/layouts/Layout";
@@ -16,64 +23,93 @@ export default function Dashboard() {
       .catch((err) => console.error("Gagal fetch tugas:", err));
   }, []);
 
+  // Data ringkasan
+  const totalKaryawan = new Set(data.map((item) => item.karyawan_id)).size;
+  const totalTugas = data.length;
+  const tugasSelesai = data.filter(
+    (item) => item.status?.toLowerCase() === "selesai"
+  ).length;
+  const tugasTertunda = totalTugas - tugasSelesai;
+
   return (
     <Layout>
-      <Container>
-        <Typography variant="h4" gutterBottom>
-          Dashboard Tugas Karyawan
-        </Typography>
-        <Button component={Link} to="/tugas/add" variant="contained" sx={{ mb: 2 }}>
-          Tambah Tugas
-        </Button>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Paper elevation={3} sx={{ p: 12, borderRadius: 3 }}>
+          <Typography variant="h4" gutterBottom fontWeight="bold">
+            Selamat Datang di WorkWise
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            Sistem pengelolaan tugas karyawan yang efisien
+          </Typography>
 
-        <Paper>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID Karyawan</TableCell>
-                <TableCell>Nama</TableCell>
-                <TableCell>Judul Tugas</TableCell>
-                <TableCell>Deskripsi</TableCell>
-                <TableCell>Tenggat Waktu</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Aksi</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.karyawan_id}</TableCell>
-                  <TableCell>{item.nama_lengkap}</TableCell>
-                  <TableCell>{item.judul}</TableCell>
-                  <TableCell>{item.deskripsi}</TableCell>
-                  <TableCell>{item.deadline}</TableCell>
-                  <TableCell>{item.status}</TableCell>
-                  <TableCell>{item.email}</TableCell>
-                  <TableCell>
-                    <Button
-                      size="small"
-                      component={Link}
-                      to={`/tugas/${item.id}`}
-                      variant="outlined"
-                      sx={{ mr: 1 }}
-                    >
-                      Detail
-                    </Button>
-                    <Button
-                      size="small"
-                      component={Link}
-                      to={`/tugas/edit/${item.id}`}
-                      variant="outlined"
-                      color="secondary"
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {/* Ringkasan Kartu */}
+          <Grid container spacing={3} sx={{ mt: 6, mb: 6 }}>
+            {[
+              {
+                title: "Karyawan",
+                value: totalKaryawan,
+                color: "#e3f2fd",
+                link: "/karyawan",
+              },
+              {
+                title: "Tugas",
+                value: totalTugas,
+                color: "#f3e5f5",
+                link: "/tugas",
+              },
+              {
+                title: "Selesai",
+                value: tugasSelesai,
+                color: "#e8f5e9",
+                extra: "Tugas selesai",
+              },
+              {
+                title: "Tertunda",
+                value: tugasTertunda,
+                color: "#fff3e0",
+                extra: "Tugas tertunda",
+              },
+            ].map(({ title, value, color, link, extra }) => (
+              <Grid item xs={12} sm={6} md={3} key={title}>
+                <Card sx={{ backgroundColor: color }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {title}
+                    </Typography>
+                    <Typography variant="h4" gutterBottom>
+                      {value}
+                    </Typography>
+                    {link && (
+                      <Button size="small" component={Link} to={link}>
+                        Lihat {title.toLowerCase()}
+                      </Button>
+                    )}
+                    {extra && (
+                      <Typography variant="body2" mt={1}>
+                        {extra}
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Kata-kata motivasi/deskripsi */}
+          <Box mt={4} textAlign="">  
+            <Typography variant="h6" gutterBottom>
+              Tingkatkan produktivitas tim Anda
+            </Typography> 
+            <Typography variant="subtitle1" color="text.secondary">
+              WorkWise membantu Anda memantau produktivitas secara menyeluruh, menyederhanakan koordinasi
+             tugas antar anggota tim, dan meningkatkan kolaborasi dengan komunikasi 
+              yang mudah serta alur kerja yang terintegrasi untuk mencapai hasil yang optimal.
+
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              Tetap fokus, selesaikan tugas tepat waktu, dan capai target bersama!
+            </Typography>
+          </Box>
         </Paper>
       </Container>
     </Layout>

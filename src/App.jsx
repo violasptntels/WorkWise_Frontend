@@ -6,6 +6,10 @@ import DetailTugas from "./pages/Tugas/DetailTugas";
 import ListKaryawan from "./pages/Karyawan/ListKaryawan";
 import AddKaryawan from "./pages/Karyawan/AddKaryawan";
 import EditKaryawan from "./pages/Karyawan/EditKaryawan";
+import Layout from "./components/layouts/Layout";
+import ListTugas from "./pages/Tugas/ListTugas";
+
+
 
 export default function App() {
   return (
@@ -14,6 +18,8 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/tugas/add" element={<AddTugas />} />
         <Route path="/tugas/edit/:id" element={<EditTugas />} />
+        <Route path="/tugas" element={<ListTugas />} />
+        <Route path="/tugas/detail/:id" element={<DetailTugas />} />
         <Route path="/tugas/:id" element={<DetailTugas />} />
         <Route path="/karyawan" element={<ListKaryawan />} />
         <Route path="/karyawan/add" element={<AddKaryawan />} />

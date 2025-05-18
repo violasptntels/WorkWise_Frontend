@@ -1,46 +1,77 @@
-import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, Box } from "@mui/material";
+import React from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Box,
+} from "@mui/material";
 import { Link } from "react-router-dom";
 
-const drawerWidth = 200;
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PeopleIcon from "@mui/icons-material/People";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import PostAddIcon from "@mui/icons-material/PostAdd";
+
+const drawerWidth = 240;
 
 export default function Layout({ children }) {
   return (
     <Box sx={{ display: "flex" }}>
-      <AppBar position="fixed" sx={{ zIndex: 1201 }}>
+      {/* AppBar */}
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h5" noWrap component="div" sx={{ fontWeight: "bold", color: "black" }}>
             WorkWise
           </Typography>
         </Toolbar>
       </AppBar>
 
+      {/* Sidebar Drawer */}
       <Drawer
         variant="permanent"
         sx={{
           width: drawerWidth,
           flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+          [`& .MuiDrawer-paper`]: {
+            width: drawerWidth,
+            boxSizing: "border-box",
+          },
         }}
       >
         <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
+        <Box sx={{ overflow: "auto" }}>
           <List>
             <ListItem button component={Link} to="/">
+              <ListItemIcon>
+                <DashboardIcon />
+              </ListItemIcon>
               <ListItemText primary="Dashboard" />
             </ListItem>
+
             <ListItem button component={Link} to="/karyawan">
-              <ListItemText primary="Karyawan" />
+              <ListItemIcon>
+                <PeopleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Data Karyawan" />
             </ListItem>
-            <ListItem button component={Link} to="/tugas/add">
-              <ListItemText primary="Tambah Tugas" />
-            </ListItem>
-            <ListItem button component={Link} to="/karyawan/add">
-              <ListItemText primary="Tambah Karyawan" />
+
+            <ListItem button component={Link} to="/tugas">
+              <ListItemIcon>
+                <AssignmentIcon />
+              </ListItemIcon>
+              <ListItemText primary="Data Tugas" />
             </ListItem>
           </List>
         </Box>
       </Drawer>
 
+      {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
         {children}
