@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Container, TextField, Button, Typography, Alert, Box, Paper, MenuItem
+  Container, TextField, Button, Typography, Alert, Box, MenuItem, Paper
 } from "@mui/material";
 import Layout from "../../components/layouts/Layout";
 import API from "../../services/api";
@@ -13,92 +13,62 @@ export default function EditTugas() {
   const [form, setForm] = useState({
     judul: "",
     deskripsi: "",
-    karyawan_id: "",
     status: "",
     deadline: "",
-    nama_lengkap: "",
-    email: "",
-    posisi: "",
   });
-  const [karyawanList, setKaryawanList] = useState([]);
+  const [original, setOriginal] = useState(null); // simpan data asli
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Fetch data tugas by ID
   useEffect(() => {
-    API.get(`/tugas/${id}`)
+    if (!id) {
+      setError("ID tugas tidak ditemukan.");
+      return;
+    }
+    API.get(`tugas/${id}`)
       .then(res => {
-        setForm(prev => ({
-          ...prev,
-          ...res.data,
-          nama_lengkap: res.data.nama_lengkap || "",
-          email: res.data.email || "",
-          posisi: res.data.posisi || "",
-        }));
+        setForm({
+          judul: res.data.judul || "",
+          deskripsi: res.data.deskripsi || "",
+          status: res.data.status || "",
+          deadline: res.data.deadline || "",
+        });
+        setOriginal(res.data); // simpan data asli
       })
       .catch(() => setError("Gagal mengambil data tugas"));
   }, [id]);
 
-  // Fetch semua karyawan
-  useEffect(() => {
-    API.get("/karyawan")
-      .then(res => setKaryawanList(res.data))
-      .catch(() => setError("Gagal mengambil data karyawan"));
-  }, []);
-
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleKaryawanChange = e => {
-    const selected = karyawanList.find(k => k.id === e.target.value);
-    setForm({
-      ...form,
-      karyawan_id: e.target.value,
-      nama_lengkap: selected?.nama_lengkap || "",
-      email: selected?.email || "",
-      posisi: selected?.posisi || "",
-    });
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
     setError(""); setSuccess("");
 
-    if (!form.judul || !form.karyawan_id || !form.deadline || !form.status) {
-      setError("Field wajib tidak boleh kosong.");
+    if (!form.judul && !form.deskripsi && !form.status && !form.deadline) {
+      setError("Minimal satu field harus diubah.");
       return;
     }
-    if (form.email && !form.email.includes("@")) {
-      setError("Format email tidak valid.");
+
+    // Siapkan objek update hanya dengan field yang diubah
+    const updateData = {};
+    if (form.judul !== original?.judul) updateData.judul = form.judul;
+    if (form.deskripsi !== original?.deskripsi) updateData.deskripsi = form.deskripsi;
+    if (form.status !== original?.status) updateData.status = form.status;
+    if (form.deadline !== original?.deadline) updateData.deadline = form.deadline;
+
+    if (Object.keys(updateData).length === 0) {
+      setError("Tidak ada perubahan data.");
       return;
     }
 
     try {
-      const dataToSend = {
-        judul: form.judul,
-        deskripsi: form.deskripsi,
-        karyawan_id: form.karyawan_id,
-        status: form.status,
-        deadline: form.deadline
-      };
-      await API.put(`/tugas/${id}`, dataToSend);
+      await API.put(`tugas/${id}`, updateData);
       setSuccess("Tugas berhasil diperbarui.");
       setTimeout(() => navigate("/tugas"), 1000);
     } catch {
       setError("Gagal update tugas.");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (window.confirm("Yakin ingin menghapus tugas ini?")) {
-      try {
-        await API.delete(`/tugas/${id}`);
-        alert("Tugas berhasil dihapus.");
-        navigate("/tugas");
-      } catch {
-        alert("Gagal menghapus tugas.");
-      }
     }
   };
 
@@ -140,42 +110,6 @@ export default function EditTugas() {
             <TextField
               fullWidth
               select
-              label="Karyawan"
-              name="karyawan_id"
-              value={form.karyawan_id}
-              onChange={handleKaryawanChange}
-              margin="normal"
-            >
-              {karyawanList.map(karyawan => (
-                <MenuItem key={karyawan.id} value={karyawan.id}>
-                  {karyawan.nama_lengkap} ({karyawan.posisi})
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              fullWidth
-              disabled
-              label="Nama Lengkap"
-              value={form.nama_lengkap}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              disabled
-              label="Email"
-              value={form.email}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              disabled
-              label="Posisi"
-              value={form.posisi}
-              margin="normal"
-            />
-            <TextField
-              fullWidth
-              select
               label="Status"
               name="status"
               value={form.status}
@@ -199,10 +133,9 @@ export default function EditTugas() {
 
             <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
               <Button type="submit" variant="contained">Simpan</Button>
-              <Button variant="outlined" color="inherit" onClick={() => navigate("/tugas")}>
+              <Button variant="outlined" color="error" onClick={() => navigate("/tugas")}>
                 Batal
               </Button>
-              <Button variant="contained" color="error" onClick={handleDelete}>Hapus</Button>
             </Box>
           </Box>
         </Box>
