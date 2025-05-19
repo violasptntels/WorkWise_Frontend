@@ -5,10 +5,10 @@ import {
   Typography,
   Drawer,
   List,
-  ListItem,
   ListItemIcon,
   ListItemText,
   Box,
+  ListItemButton, // tambahkan import ini
 } from "@mui/material";
 import { Link } from "react-router-dom";
 
@@ -47,26 +47,26 @@ export default function Layout({ children }) {
         <Toolbar />
         <Box sx={{ overflow: "auto" }}>
           <List>
-            <ListItem button component={Link} to="/">
+            <ListItemButton component={Link} to="/">
               <ListItemIcon>
                 <DashboardIcon />
               </ListItemIcon>
               <ListItemText primary="Dashboard" />
-            </ListItem>
+            </ListItemButton>
 
-            <ListItem button component={Link} to="/karyawan">
+            <ListItemButton component={Link} to="/karyawan">
               <ListItemIcon>
                 <PeopleIcon />
               </ListItemIcon>
               <ListItemText primary="Data Karyawan" />
-            </ListItem>
+            </ListItemButton>
 
-            <ListItem button component={Link} to="/tugas">
+            <ListItemButton component={Link} to="/tugas">
               <ListItemIcon>
                 <AssignmentIcon />
               </ListItemIcon>
               <ListItemText primary="Data Tugas" />
-            </ListItem>
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
